@@ -1,0 +1,427 @@
+Grep
+====
+:noa[utocmd] vim[grep] /{pattern}/gj ../**/*.c
+:cw         open window with results
+:colder     older search results
+:cnewer     newer search results
+
+vimgrep does not rely on an external progam.  'g' = all occurrences,
+j = don't jump to first occurrence.  The file spec above means
+back up one dir level then search all subdirs recursively. The
+noautocmd is to speed up loading the files that are searched.
+
+Tricks
+======
+To make a row of equal signs the same length as the line above (as
+in the two line header above), type the line, esc then:
+yypVr=
+6 keystrokes, no counting.  Not bad.
+
+Insert files and dir listings
+=============================
+
+:r foo.txt     insert the file foo.txt below the cursor
+:0r foo.txt    insert the file foo.txt before the first line.
+:r !dir        insert a directory listing below the cursor 
+:r !cd         insert the current working below the cursor
+:$r !cd        insert the current working directory below the last line
+
+Search and replace in a visual selection
+========================================
+The substitute command (:s) applies to whole lines, however the \%V atom will 
+restrict a pattern so that it matches only inside the visual selection. This 
+works with characterwise and blockwise selection (and is not needed with 
+linewise selection). The selection need not be highlighted for this to work.
+
+:%s/\%Vabc/def/
+
+Search(/) will extend a selection, so to search a visual selection, hit
+ESC first then:
+
+/\%Vabc 
+
+Can make a macro like this:
+
+:vnoremap <M-/> <Esc>/\%V
+
+learn and then move to proper place
+===================================
+'[, `[      To the first character of the previously changed/yanked text
+'], `]      To the last character of the previously changed/yanked text
+'<, `<      To the first character of the last selected Visual block
+'., `.      To the position where the last change was made
+
+In insert mode, issue a command or search and return to insert mode:
+ctrl-o :
+ctrl-o /
+
+In command mode, to scroll up and down history without using arrow keys:
+ctrl-n
+ctrl-p
+
+useful combos
+=============
+dwwP              swap words (if there is another word after the next one)
+ddp               swap current line with next one
+vt;c              visual mark to next ";", delete, leave in insert mode 
+                  (allows you to see what is going to change and modify if necessary)
+
+3J                join with a count
+9>>               shift right with a count
+:ce               center a line
+:le               left justify a line
+:ri               right justify a line 
+
+
+get rid of all buffers
+======================
+:1,99bdelete
+
+command line
+=============
+ctrl-r            insert contents of a register
+ctrl-r "          last delete or yank
+ctrl-r *          clipboard
+ctrl-r ctrl-a     WORD under cursor ($dev05.lvlhcom.lhcom)
+ctrl-r ctrl-w     word under cursor (dev05)
+
+change tabs to spaces
+======================
+:set expandtab
+:retab
+
+
+tabs
+====
+:tabe       create a tab
+:tabm n     move a tab after tab n (0 = first, nothing = last)
+:tabd cmd   execute cmd in each tab
+gt          jump between tabs
+2gt         jump to tab2
+
+repeat
+======
+.      last edit (magic dot)
+:&     last substitute
+:~     last substitute
+:&&    last substitute (with flags)
+:%&    last substitute every line
+:%&gic last substitute every line
+&      last substitute (forgets flags)
+g&     last substitute on all lines with flags
+@@     last recording
+@:     last command-mode command
+:!!    last :! command
+
+
+miscellaneous
+=============
+[i, [I      show first, all locations of word under cursor
+[ctrl-i     jumps to first occurence of word under cursor (searches include files)
+[d, [D      search for first, all macro definitions from top of file
+[ctrl-d     jump to macro definition, starting at top of file
+:`x,`z w filename     write part of a file to a new one
+vimdiff file1, file2
+:find <filename>    searches path for the file
+gd          search for variable definition
+gD          search for global variable definition
+gf          open filename under cursor
+:e!         return to unmodified file
+gq          wrap highlighted text
+gj          join lines without spaces
+[p, ]p      paste with indent above, below
+q:          command line history
+:ctrl-f        ""     ""    ""
+q/          search history window, ctrl-c to exit
+ctrl-g      display file name
+1ctrl-g     display file name with path
+2ctrl-g     display file name with path and buffer #
+
+g<ctrl-g>   count words
+ga          display hex, ascii value of char under cursor
+gv          reselect last visual area
+“=38*56<Enter>p      enter a calculation
+<c-r>=5*5            same as above in insert mode
+:normal p   enter normal mode command (e.g. "p") in command line
+:%norm jdd  delete every other line
+in vimrc:
+map <c-n> O<c-[>     ctrl-n to open a blank line, stay in normal mode
+qaq         clear register a
+
+
+Searching
+=========
+/abc/e            cursor to end of match
+/abc\_.*xyz       multiple lines
+/abc\_.\{-}xyz    non-greedy (minimal match) "{-}" replaces "*"
+/abc\|xyz         search for "abc" or "xyz"
+/^\%(\%(abc\)\@!.\)*$   find line w/o "abc" 
+
+substitution
+============
+The first command finds every line in the range with "Abc" and changes
+"yy" to 10,11,12,etc.  The second line does the same thing but only 
+when "yy" is part of "xxyy".  The tricks are the use of a register as
+substitution text "=i" and, in the second command, the use of the
+start and stop match markers "\zs" and "\ze".  Note that this has
+to be a global command to work but that if every line needs to be
+changed, replacing "/Abc/" with "//" will do the trick.
+
+:let i=10|'a,'bg/Abc/s/yy/\=i/|let i=i+1
+
+:let i=10|'a,'bg/Abc/s/xx\zsyy\ze/\=i/|let i=i+1
+:%s:\s*$::      delete trailing spaces, note can use ":" instead of "/"
+:%s=abc=abc=n   count occurrences of "abc", use "=" for separator
+
+
+delete
+======
+s, cl       delete count characters, leave in insert mode
+S, cc       delete count lines, leave in insert mode
+C, c$       delete from cursor to EOL (or count lines), leave in insert mode
+r<char>     visual, replace all selected characters with char
+0<ctrl-q>10j2ld   visual, delete first two characters of ten lines
+dt;         delete to next semicolon
+dib         delete everything in parens exclusive
+diB         delete everything in curly braces exclusive
+:.,$d       delete from current to last line
+
+Global
+=======
+:g/verner/#    display with line numbers
+:g/^\s*$/d     delete all blank lines (\s = whitespace)
+:g!/dd/d       delete lines not containing string
+:v/dd/d        delete lines not containing string
+:g/first/s/second/third/    find lines with first, sub third for second
+:g/verner/t$   copy lines with string to bottom of file
+:'t+1,.g/^/m 't   reverse lines (note use of "`t" with "m" command)
+:g/^Error/.w>>errors.txt    write found lines to file (note ".")
+:g//normal "Ayy   yank lines containing previous search term to register A
+                  (note: using register a will only get the last line found)
+:g//y A           same as above
+:g/abc/z#.5       display with context
+:g/abc/z#.5|echo "=========="
+
+
+indent
+======
+==          indent current line
+=           indent several lines in visual mode
+=v}         indent to end of current block
+=vG         indent to last line
+ctrl-d, ctrl-t    insert mode undent, indent line
+
+
+cursor movement
+===============
+H, M, L     cursor to top, middle, bottom of screen
+zt, zz, zb  current line to top, middle, bottom of screen
+zh, zl      scroll screen count characters left, ight
+zH, zL      scroll half-screen left, ight
+gg, G       first line, last line of file
+:0, :$      first line, last line of file 
+1234G       line number
+1234gg      line number
+:1234       line number
+:goto 5000  byte
+n|          column n
+$           block visual mode, extends block to end of all lines
+[[, ]]      prev and next '{' or '}' in first column
+[{, ]}      prev and next '{' or '}' in current block
+{, }        prev and next paragraph
+[*, ]*      backwards/forwards to start/end of C comment[\
+[/, ]/      backwards/forwards to start/end of C comment[\
+o           top and bottom of visual selection
+O           left and right of visual selection
+:/abc/2 y         find line with "abc", move down two lines, yank (note colon)
+:// normal p      find line with last search item and paste
+
+Tags
+=====
+see http://ctags.sourceforge.net/faq.html#15
+
+:set path=C:\Work\Debit Src\**   add directory tree to path
+
+build a tag file in the current directory(Windows)
+:nmap ,t :!cd %:p:h&&ctags *.c *.h<CR>
+(Unix)
+:nmap ,t :!(cd %:p:h;ctags *.[ch])&
+
+make a global tag file in the project directory
+ctags *.c *.h --file-scope=no -R
+
+set Vim to look at local tag file first then project tag file
+Note: don't know if the ".\" is necessary and there should be
+a way to specify the second item with a relative path
+set tags=.\tags,c:\work\DebitSrc\project\tags 
+
+ctrl-]            jump to the definition of the tag the cursor is on
+:ta[g] name       jump to the definition of name 
+:ta[g]            newer entry in tag stack
+ctrl-t            older entry in tag stack
+:po[p]            older entry in tag stack
+:ts[elect]        list the tags that match
+g]                like ctrl-] but uses tselect instead of tag
+:tags             list tags
+
+changing case
+=============
+guu, Vu     lowercase line
+gUU, VU     uppercase line
+g~~         flip case line
+g~w         change case of word from cursor
+veU         uppercase word
+veu         lowercase word
+vE~         flip case word
+
+external programs
+=================
+:r!dir
+!!dir       same thing but replaces current line
+
+appending to registers
+======================
+"a5yy
+10j
+"A5yy
+
+insert repeated text
+======================
+80i* <esc>     makes a line of 80 asterisks
+              
+ctrl-q         insert the same text before/after a column
+5j
+I <text><esc>
+A <text><esc>
+
+ctrl-q         insert the same text at the end of uneven lines
+5j$
+A <text><esc>
+
+move text
+=========
+ma
+mb
+:`a,`b move
+
+search and replace across multiple files
+=========================================
+qq
+:%s/\<GetResp\>/GetAnswer/ge     'e' means no match is not an error
+:wnext
+q
+@q
+999@q
+
+Fold commands:
+===============
+Vim searches inside folds but leaves the fold open if search string is found.
+zm will refold.  Folds are treated as a single line for deleting and yanking.
+
+:20,101 fo  creates a fold from line 20 to line 101
+:.,20 fo    creates a fold from the current line up to line 20
+zf#j        creates a fold from the cursor down # lines
+zf/         string creates a fold from the cursor to string
+zfa}        creates a fold from a '{' to the matching '}' (also ')' and ']') inclusive
+zfi}        creates a fold from a '{' to the matching '}' (also ')' and ']') exclusive
+zf          creates a fold in visual mode
+zj          moves the cursor to the next fold.
+zk          moves the cursor to the previous fold.
+zo          opens a fold at the cursor.
+zO          opens all folds at the cursor.
+zm          increases the foldlevel by one.
+zM          closes all open folds.
+zr          decreases the foldlevel by one.
+zR          decreases the foldlevel to zero -- all folds will be open.
+zd          deletes the fold at the cursor.
+zE          deletes all folds.
+[z          move to start of open fold.
+]z          move to end of open fold.
+
+to set folds by indentation rather than manually:
+:set foldmethod=indent
+
+to save and load folds:
+:mkview
+:loadview
+
+in vimrc:
+au BufWinLeave * mkview
+au BufWinEnter * loadview
+
+marks and jumps
+===============
+mx          adds a mark called x.
+`x          return to the line and column for mark x.
+'x          return to the beginning of the line for mark x
+`.          moves the cursor to the line and column where the last edit was made.
+'.          moves the cursor to the last line edited
+g;          moves the cursor to the last line edited
+g,          moves the cursor to the prev line edited
+'"          moves the cursor to the last position of the cursor when you exited the previous session.
+
+:marks      shows all marks set.
+:marks x    shows the mark named x.
+:jumps      shows the jumplist.
+Ctrl-o      moves the cursor to the last jump.
+Ctrl-i      moves the cursor to the previous jump.
+
+use marks instead of line numbers in commands:
+: 'x,'y s/foo/bar/g     
+
+Windows
+=======
+ctrl-w ctrl-^  split window and edit alternate file
+ctrl-w ctrl-i  split window and [i
+ctrl-w ctrl-d  split window and [ctrl-d
+ctrl-w g]      split window and ctrl-]
+ctrl-w f       split window and :find
+ctrl-w s       split
+ctrl-w v       split vertical
+ctrl-w o       only - closes all but current
+ctrl-w c       closes current window
+ctrl-w w       jump between windows
+[n]ctrl-w +    resize
+[n]ctrl-w -
+[n]ctrl-w _    increase to specific height
+ctrl-w h       move to window left 
+ctrl-w 2h      move two windows left
+ctrl-w j       move to window down
+ctrl-w k       move to window up
+ctrl-w l       move to window right
+ctrl-w t       move to window top
+ctrl-w b       move to window bottom
+ctrl-w H       current window to far left
+ctrl-w J       current window to bottom
+ctrl-w K       current window to top
+ctrl-w L       current window to far right
+ctrl-w [       splits window and jumps to tag in new window
+:qall          quit all
+:wall          save all
+
+in vimrc:
+map <C-j> <C-W>s<C-W>j     create new window below and move there
+map <C-l> <C-W>v<C-W>l     create new window to right and move there
+
+sessions
+========
+Session files may be edited and sometimes need to be since
+settings will override vimrc changes.
+
+mk! c:\work\lee\visa.vim          mksession
+so  c:\work\lee\visa.vim          source
+
+show, set, and reset vim's variables 
+====================================
+:set             shows vars different from defaults
+:set all         shows all values
+:set foo?        shows the value of foo
+:set foo+=opt    add opt to the value w/o changing others
+:set foo-=opt    remove opt from value
+:set foo&        reset foo to default value
+:setlocal foo    only the current buffer
+
+
+
+
+
